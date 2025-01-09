@@ -1,0 +1,14 @@
+{
+  "name": "mmm-mtatraintimes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "MMM-MTATrainTimes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gtfs-realtime-bindings": "^1.1.1"
+  }
+}

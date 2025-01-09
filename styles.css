@@ -1,0 +1,26 @@
+.module.MMM-MTAArrivalTimes {
+    width: 120%;
+    transform: translateX(-20%);
+    text-align: left;
+}
+
+.train-logo {
+    width: 1.5em;
+    height: auto;
+    vertical-align: middle;
+}
+
+.station-arrival {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.station {
+    text-align: left;
+}
+
+.arrival-time {
+    text-align: right;
+}
