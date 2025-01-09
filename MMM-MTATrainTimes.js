@@ -11,7 +11,7 @@ Module.register("MMM-MTATrainTimes", {
         return "79th St Manhattan Bound D Train";
     },
     getStyles: function() {
-        return ["style.css"];
+        return ["MMM-MTATrainTimes.css"];
     },
 
     // Define start sequence
