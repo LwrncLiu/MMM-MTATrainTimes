@@ -1,6 +1,6 @@
-.module.MMM-MTAArrivalTimes {
-    width: 120%;
-    transform: translateX(-20%);
+.module.MMM-MTATrainTimes {
+    width: 140%;
+    transform: translateX(-40%);
     text-align: left;
 }
 
@@ -15,11 +15,11 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    font-size: 25px;
 }
 
 .station {
     text-align: left;
-    font-size: 16px;
 }
 
 .arrival-time {
