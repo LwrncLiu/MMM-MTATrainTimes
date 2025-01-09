@@ -49,7 +49,7 @@ Module.register("MMM-MTATrainTimes", {
                     };
                     return `<div>
                         <span class="station-arrival">
-                            <span class="station"><img class="train-logo" src="MMM-MTAArrivalTimes/images/d_train.png" alt="D Train">${arrival.lastStop}</span>
+                            <span class="station"><img class="train-logo" src="MMM-MTATrainTimes/images/d_train.png" alt="D Train">${arrival.lastStop}</span>
                             <span class="arrival-time">${arrivalTimeMessage}</span>
                         </span>
                     </div>`;
