@@ -1,14 +1,31 @@
 Module.register("MMM-MTATrainTimes", {
     defaults: {
-        updateInterval: 20000,
-        callApiInterval: 60000,
+        updateInterval: 20000,   // recalculate train status every 20 seconds
+        callApiInterval: 300000, // call API every 10 minutes
         fadeSpeed: 0,
         retryDelay: 2500,
-        apiBase: "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm"
+        apiBase: "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
+        stopId: "B18",
+        northBound: true,
+        southBound: false,
+        numTrains: 5,
+        stopName: "",
+        futureArrivals: []
     },
-    futureArrivals: [],
     getHeader: function () {
-        return "79th St Manhattan Bound D Train";
+        let directionMessage = ""
+        if (this.config.northBound && this.config.southBound) {
+            directionMessage = "Northbound & Southbound";
+        } else if (this.config.northBound) {
+            directionMessage = "Northbound";
+        } else if (this.config.southBound) {
+            directionMessage = "Southbound";
+        };
+
+        if (directionMessage.length === 0) {
+            return "Update Module Config for Train Direction"
+        }
+        return this.stopName + " Upcoming " + directionMessage + " Trains"
     },
     getStyles: function() {
         return ["MMM-MTATrainTimes.css"];
@@ -18,11 +35,12 @@ Module.register("MMM-MTATrainTimes", {
     start: function () {
         Log.info("Starting module: " + this.name);
 
-        // Schedule update timer
-        // Fetch API data every 60 seconds
-        this.sendSocketNotification("GET_TRAIN_STATUS", null);
+        this.sendSocketNotification("GET_STOP_NAME", this.config);
+
+        // Fetch API data every 5 minutes
+        this.sendSocketNotification("GET_TRAIN_STATUS", this.config);
         setInterval(() => {
-            this.sendSocketNotification("GET_TRAIN_STATUS", null);
+            this.sendSocketNotification("GET_TRAIN_STATUS", this.config);
         }, this.config.callApiInterval);
 
         // Refresh the dom more frequently
@@ -36,12 +54,13 @@ Module.register("MMM-MTATrainTimes", {
         const wrapper = document.createElement("div");
         wrapper.className = this.config.classes ? this.config.classes : "urban bright";
         
-        if (this.futureArrivals.length === 0) {
-            wrapper.innerHTML = "<div>No upcoming arrivals for Northbound D Train</div>";
+        if (this.config.futureArrivals.length === 0) {
+            wrapper.innerHTML = "<div>No upcoming arrivals</div>";
         } else {
             const now = Date.now();
-            const arrivalList = this.futureArrivals.sort((a, b) => a.arrivalTime - b.arrivalTime).map(arrival => {    
+            const arrivalList = this.config.futureArrivals.sort((a, b) => a.arrivalTime - b.arrivalTime).map(arrival => {    
                 const arrivalTimeInMinutes = Math.floor((arrival.arrivalTime - now) / 60000);
+
                 if (arrivalTimeInMinutes >= 0) {
                     let arrivalTimeMessage = arrivalTimeInMinutes + " min"
                     if (arrivalTimeInMinutes == 0) {
@@ -54,16 +73,20 @@ Module.register("MMM-MTATrainTimes", {
                         </span>
                     </div>`;
                 };
-            }).join('');
-            wrapper.innerHTML = `<div class="train-status">${arrivalList}</div>`
+            });
+            const arrivalsToDisplay = arrivalList.slice(0, this.config.numTrains).join('');
+            wrapper.innerHTML = `<div class="train-status">${arrivalsToDisplay}</div>`
         }
         return wrapper;
     },
 
     socketNotificationReceived: function (notification, payload) {
+        if (notification === "STOP_NAME") {
+            this.stopName = payload.stopName;
+        };
         if (notification === "TRAIN_STATUS") {
-            this.futureArrivals = payload;
+            this.config.futureArrivals = payload;
             this.updateDom(this.config.fadeSpeed);
-        }
+        };
     },
 });
