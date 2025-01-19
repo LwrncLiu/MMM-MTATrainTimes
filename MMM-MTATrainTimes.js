@@ -60,7 +60,7 @@ Module.register("MMM-MTATrainTimes", {
             const now = Date.now();
             const arrivalList = this.config.futureArrivals.sort((a, b) => a.arrivalTime - b.arrivalTime).map(arrival => {    
                 const arrivalTimeInMinutes = Math.floor((arrival.arrivalTime - now) / 60000);
-
+                const arrivalTrain = arrival.routeId.toLowerCase();
                 if (arrivalTimeInMinutes >= 0) {
                     let arrivalTimeMessage = arrivalTimeInMinutes + " min"
                     if (arrivalTimeInMinutes == 0) {
@@ -68,7 +68,7 @@ Module.register("MMM-MTATrainTimes", {
                     };
                     return `<div>
                         <span class="station-arrival">
-                            <span class="station"><img class="train-logo" src="MMM-MTATrainTimes/images/d_train.png" alt="D Train">${arrival.lastStop}</span>
+                            <span class="station"><img class="train-logo" src="MMM-MTATrainTimes/images/${arrivalTrain}_train.png" alt="D Train">${arrival.lastStop}</span>
                             <span class="arrival-time">${arrivalTimeMessage}</span>
                         </span>
                     </div>`;
