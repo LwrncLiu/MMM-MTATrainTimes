@@ -19,19 +19,19 @@ npm install
 Add the module to the `~/MagicMirror/config/config.js` file under modules:
 ```
 modules: [
-        {
-            ...
-        },
-		{
-			module: "MMM-MTATrainTimes",
-			position: "top_right",
-			config: {
-				stopId: "B18",
-				northBound: true,
-				southBound: false
-			}
+    {
+        ...
+    },
+	{
+	    module: "MMM-MTATrainTimes",
+		position: "top_right",
+		config: {
+		    stopId: "B18",
+			northBound: true,
+            southBound: false
 		}
-	]
+	}
+]
 ```
 
 ### Configuration Options
