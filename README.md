@@ -19,7 +19,9 @@ npm install
 Add the module to the `~/MagicMirror/config/config.js` file under modules:
 ```
 modules: [
-		...
+        {
+            ...
+        },
 		{
 			module: "MMM-MTATrainTimes",
 			position: "top_right",
@@ -37,4 +39,4 @@ modules: [
 | --- | --- |
 | `stopId` | The stopId the module will display train times for. See `stopNameMap` in `node_helper.js` for the list of available stops. |
 | `northBound` | The module will display north bound trains if set to true. |
-| `southBound` | The module will display south bound trains if set to false. |
+| `southBound` | The module will display south bound trains if set to true. |
