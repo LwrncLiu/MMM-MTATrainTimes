@@ -23,14 +23,14 @@ modules: [
         ...
     },
 	{
-	    module: "MMM-MTATrainTimes",
-		position: "top_right",
-		config: {
-		    stopId: "B18",
-			northBound: true,
+        module: "MMM-MTATrainTimes",
+        position: "top_right",
+        config: {
+            stopId: "B18",
+            northBound: true,
             southBound: false
-		}
-	}
+            }
+    }
 ]
 ```
 
