@@ -22,7 +22,7 @@ modules: [
     {
         ...
     },
-	{
+    {
         module: "MMM-MTATrainTimes",
         position: "top_right",
         config: {
