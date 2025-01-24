@@ -5,7 +5,8 @@ Module.register("MMM-MTATrainTimes", {
         fadeSpeed: 0,
         retryDelay: 2500,
         apiBase: "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
-        stopId: "B18",
+        stopId: "",
+        routeIds: [],
         northBound: true,
         southBound: false,
         numTrains: 5,
@@ -68,13 +69,13 @@ Module.register("MMM-MTATrainTimes", {
                     };
                     return `<div>
                         <span class="station-arrival">
-                            <span class="station"><img class="train-logo" src="MMM-MTATrainTimes/images/${arrivalTrain}_train.png" alt="D Train">${arrival.lastStop}</span>
+                            <span class="station"><img class="train-logo" src="MMM-MTATrainTimes/images/${arrivalTrain}_train.png">${arrival.lastStop}</span>
                             <span class="arrival-time">${arrivalTimeMessage}</span>
                         </span>
                     </div>`;
                 };
             });
-            const arrivalsToDisplay = arrivalList.slice(0, this.config.numTrains).join('');
+            const arrivalsToDisplay = arrivalList.filter( Boolean ).slice(0, this.config.numTrains).join('');
             wrapper.innerHTML = `<div class="train-status">${arrivalsToDisplay}</div>`
         }
         return wrapper;
