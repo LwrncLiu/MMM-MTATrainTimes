@@ -1,6 +1,6 @@
 # MMM-MTATrainTimes
 
-Displays upcoming train times for a specific MTA station. DISCLAIMER: this module is currently only compatible with the D-line. TODO: make it extensible to all train lines.
+Displays upcoming train times for a given MTA station.
 
 ![example](./documentation/example.png)
 
@@ -26,17 +26,24 @@ modules: [
         module: "MMM-MTATrainTimes",
         position: "top_right",
         config: {
-            stopId: "B18",
+            stopId: "R31",
+            routeIds: ["D", "N"],
             northBound: true,
-            southBound: false
+            southBound: false,
+            numTrains: 10,
             }
     }
 ]
 ```
 
 ### Configuration Options
-| config | description | 
-| --- | --- |
-| `stopId` | The stopId the module will display train times for. See `stopNameMap` in `node_helper.js` for the list of available stops. |
-| `northBound` | The module will display north bound trains if set to true. |
-| `southBound` | The module will display south bound trains if set to true. |
+
+| config | type | description | 
+| --- | --- | --- | 
+| `stopId` | String | The stop id of the station the module will display train times for. See the `parentStops` map in `node_helper.js` for the list of available stops. Some stations with more than one platform can have multiple id values. |
+| `routeIds` | Array[String] | Filters trains by train line. All trains lines arriving at the station will be shown if this parameter is null or an empty list. |
+| `northBound` | Boolean | The module north bound trains if set to true. |
+| `southBound` | Boolean | The module will display south bound trains if set to true. |
+| `numTrains` | Number | The maximum number of trains to be displayed at once. |
+
+<em>In the example configuration, the module will display the next 10 northbound D and N trains arriving at Atlantic Av-Barclays Ctr.</em>

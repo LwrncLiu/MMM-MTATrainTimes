@@ -559,7 +559,6 @@ module.exports = NodeHelper.create({
             const fetch = (await import('node-fetch')).default;
 
             const apiBases = this.getApis(routeIds);
-            console.log(apiBases)
             const responses = await this.callApis(apiBases);
             const futureArrivals = await this.parsefutureArrivals(stopId, northBound, southBound, routeIds, responses);
             return futureArrivals;

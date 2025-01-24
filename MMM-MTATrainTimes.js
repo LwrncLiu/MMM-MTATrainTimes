@@ -26,13 +26,12 @@ Module.register("MMM-MTATrainTimes", {
         if (directionMessage.length === 0) {
             return "Update Module Config for Train Direction"
         }
-        return this.stopName + " Upcoming " + directionMessage + " Trains"
+        return this.stopName + " " + directionMessage + " Trains"
     },
     getStyles: function() {
         return ["MMM-MTATrainTimes.css"];
     },
 
-    // Define start sequence
     start: function () {
         Log.info("Starting module: " + this.name);
 
@@ -50,7 +49,6 @@ Module.register("MMM-MTATrainTimes", {
         }, this.config.updateInterval)
     },
     
-    // Override dom generator
     getDom: function () {
         const wrapper = document.createElement("div");
         wrapper.className = this.config.classes ? this.config.classes : "urban bright";
