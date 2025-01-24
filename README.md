@@ -42,7 +42,7 @@ modules: [
 | --- | --- | --- | 
 | `stopId` | String | The stop id of the station the module will display train times for. See the `parentStops` map in `node_helper.js` for the list of available stops. Some stations with more than one platform can have multiple id values. |
 | `routeIds` | Array[String] | Filters trains by train line. All trains lines arriving at the station will be shown if this parameter is not set or an empty list. |
-| `northBound` | Boolean | The module north bound trains if set to true. |
+| `northBound` | Boolean | The module will display north bound trains if set to true. |
 | `southBound` | Boolean | The module will display south bound trains if set to true. |
 | `numTrains` | Number | The maximum number of trains to be displayed at once. |
 
