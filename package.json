@@ -4,12 +4,15 @@
   "description": "",
   "main": "MMM-MTATrainTimes.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "gtfs-realtime-bindings": "^1.1.1",
     "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
