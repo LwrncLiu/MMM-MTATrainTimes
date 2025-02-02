@@ -1,4 +1,4 @@
-class MMMMTATrainTimes {
+class MTATrainTimes {
     constructor(config, sendSocketNotification, updateDom) {
         this.config = {
             updateInterval: 20000,   // recalculate train status every 20 seconds
@@ -102,53 +102,53 @@ class MMMMTATrainTimes {
     }
 }
 
-Module.register("MMM-MTATrainTimes", {
-    defaults: {
-        stopId: "",
-        routeIds: [],
-        northBound: true,
-        southBound: false,
-        numTrains: 5,
-    },
-    getHeader: function () {
-        if (this.mtaTrainTimes) {
-            return this.mtaTrainTimes.getHeader();
-        }
-    },
-
-    getStyles: function() {
-        return ["MMM-MTATrainTimes.css"];
-    },
-
-    start: function () {
-        this.mtaTrainTimes = new MMMMTATrainTimes(
-            this.config,
-            this.sendSocketNotification.bind(this),
-            this.updateDom.bind(this)
-        );
-        this.mtaTrainTimes.start();
-    },
-
-    stop: function () {
-        if (this.mtaTrainTimes) {
-            this.mtaTrainTimes.stop();
-        }
-    },
-    
-    getDom: function () {
-        if (this.mtaTrainTimes) {
-            return this.mtaTrainTimes.getDom()
-        }
-    },
-
-    socketNotificationReceived: function (notification, payload) {
-        if (this.mtaTrainTimes) {
-            this.mtaTrainTimes.socketNotificationReceived(notification, payload);
-        }
-    },
-});
-
 // Export for testing
-if (typeof module !== "undefined") {
-    module.exports = MMMMTATrainTimes;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = MTATrainTimes;
+} else {
+    Module.register("MMM-MTATrainTimes", {
+        defaults: {
+            stopId: "",
+            routeIds: [],
+            northBound: true,
+            southBound: false,
+            numTrains: 5,
+        },
+        getHeader: function () {
+            if (this.mtaTrainTimes) {
+                return this.mtaTrainTimes.getHeader();
+            }
+        },
+    
+        getStyles: function() {
+            return ["MMM-MTATrainTimes.css"];
+        },
+    
+        start: function () {
+            this.mtaTrainTimes = new MTATrainTimes(
+                this.config,
+                this.sendSocketNotification.bind(this),
+                this.updateDom.bind(this)
+            );
+            this.mtaTrainTimes.start();
+        },
+    
+        stop: function () {
+            if (this.mtaTrainTimes) {
+                this.mtaTrainTimes.stop();
+            }
+        },
+        
+        getDom: function () {
+            if (this.mtaTrainTimes) {
+                return this.mtaTrainTimes.getDom()
+            }
+        },
+    
+        socketNotificationReceived: function (notification, payload) {
+            if (this.mtaTrainTimes) {
+                this.mtaTrainTimes.socketNotificationReceived(notification, payload);
+            }
+        },
+    });
 }
