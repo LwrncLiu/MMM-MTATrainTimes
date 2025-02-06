@@ -2,6 +2,153 @@ const NodeHelper = require('node_helper');
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 const { response } = require('express');
 
+class MTATrainTimesNodeHelper {
+    constructor(apiBases, parentStops, sendSocketNotification) {
+        this.apiBases = apiBases;
+        this.parentStops = parentStops;
+        this.sendSocketNotification = sendSocketNotification;
+    }
+
+    socketNotificationReceived(notification, payload) {
+        console.log(notification)
+        switch (notification) {
+            case 'GET_TRAIN_STATUS': {
+                const stopId = payload.stopId;
+                const northBound = payload.northBound;
+                const southBound = payload.southBound;
+                const routeIds = payload.routeIds;
+                this.getTrainStatus(stopId, northBound, southBound, routeIds)
+                    .then((futureArrivals) => {
+                        this.sendSocketNotification('TRAIN_STATUS', futureArrivals);
+                    })
+                    .catch((error) => {
+                        console.error('Error fetching train status:', error);
+                    });
+                break;
+            }
+            case 'GET_STOP_NAME': {
+                const stopId = payload.stopId;
+                const stopName = this.parentStops[stopId]['stopName'];
+                this.sendSocketNotification('STOP_NAME', {stopId: stopId, stopName: stopName});
+                break;
+            }
+            default:
+                console.warn(`Unknown notification ${notification}`);
+        }
+    }
+
+    async getTrainStatus(stopId, northBound, southBound, routeIds) {
+        try {
+            const fetch = (await import('node-fetch')).default;
+
+            const apiBases = this.getApis(routeIds);
+            const responses = await this.callApis(apiBases);
+            const futureArrivals = await this.parsefutureArrivals(stopId, northBound, southBound, routeIds, responses);
+            return futureArrivals;
+        }
+        catch (error) {
+            console.error(error);
+            process.exit(1);
+        }
+    }
+
+    getApis(routeIds) {
+        let apiBases = NaN
+        if (routeIds.length > 0) {
+            apiBases = routeIds
+                .filter(routeId => routeId in this.apiBases)
+                .map(routeId => this.apiBases[routeId]);
+        } else {
+            apiBases = Object.values(this.apiBases)
+        }
+
+        return [...new Set(apiBases)];
+    }
+
+    async callApis(apiBases) {
+        try {
+            const responses = await Promise.all(
+                apiBases.map(async (apiBase) => {
+                    const response = await fetch(apiBase);
+                    if (!response.ok) {
+                        throw new Error(`${response.url}: ${response.status} ${response.statusText}`);
+                    }
+                    return response;
+                })
+            );
+            return responses;
+        } catch (error) {
+            console.error(`Error calling APIs: ${error}`);
+        }
+    }
+
+    async parsefutureArrivals(stopId, northBound, southBound, routeIds, responses) {
+        try {
+            const allFutureArrivals = await Promise.all(responses.map(async (response) => {
+                const futureArrivals = [];
+                const buffer = await response.arrayBuffer();
+                const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+
+                feed.entity.forEach((entity) => {
+                    if (entity.tripUpdate && this.isArrivingTrain(entity.tripUpdate, northBound, southBound)) {
+                        const stopTimeUpdates = entity.tripUpdate.stopTimeUpdate;
+                        const routeId = entity.tripUpdate.trip.routeId;
+                        if (routeIds.length === 0 || routeIds.includes(routeId)) {
+                            let stopArrivalTime = null;
+                            let lastStop = null;
+    
+                            for (let update of stopTimeUpdates) {
+                                if (this.parentStops[stopId]['childStops'].includes(update.stopId)) {
+                                    stopArrivalTime = update.arrival.time;
+                                };
+                            };
+                            if (stopArrivalTime) {
+                                lastStop = this.parentStops[stopTimeUpdates[stopTimeUpdates.length - 1].stopId.slice(0, -1)]?.stopName || 'unknown'; 
+                            };
+                            if (lastStop) {
+                                futureArrivals.push({
+                                    'arrivalTime': stopArrivalTime.low * 1000,
+                                    'lastStop': lastStop,
+                                    'routeId': routeId
+                                });
+                            };
+                        };
+                    };
+                });
+                return futureArrivals;
+            }));
+
+            return allFutureArrivals.flat();
+        } catch (error) {
+            console.error(`Error processing API responses: ${error}`)
+        }
+    }
+
+    parseTripDirection(tripId) {
+        const pattern = /^\d{6}_[A-Za-z0-9]\.\.(S|N)/;
+        const match = tripId.match(pattern);
+        if (match) {
+            const direction = match[1];
+            return direction === 'S' ? 'South' : 'North';
+        };
+        return null;
+    }
+
+    isArrivingTrain(tripUpdate, northBound, southBound) {
+        const isNorthbound = this.parseTripDirection(tripUpdate.trip.tripId) === 'North';
+     
+        let isArrivingTrain = false
+        if (northBound && southBound) {
+            isArrivingTrain = true
+        } else if (northBound && !southBound) {
+            isArrivingTrain = (isNorthbound)
+        } else if (!northBound && southBound) {
+            isArrivingTrain = (!isNorthbound)
+        } 
+        return isArrivingTrain;
+    }
+
+}
 
 module.exports = NodeHelper.create({
     start: function () {
@@ -532,137 +679,16 @@ module.exports = NodeHelper.create({
             'S30': {'childStops': ['S30N', 'S30S'], 'stopName': 'Tompkinsville'},
             'S31': {'childStops': ['S31N', 'S31S'], 'stopName': 'St George'}
         };  
+        this.MTATrainTimesNodeHelper = new MTATrainTimesNodeHelper(
+            this.apiBases,
+            this.parentStops,
+            this.sendSocketNotification.bind(this)
+        )
     },
 
     socketNotificationReceived: function (notification, payload) {
-        if (notification === 'GET_TRAIN_STATUS') {
-            const stopId = payload.stopId;
-            const northBound = payload.northBound;
-            const southBound = payload.southBound;
-            const routeIds = payload.routeIds
-            this.getTrainStatus(stopId, northBound, southBound, routeIds)
-                .then((futureArrivals) => {
-                    this.sendSocketNotification('TRAIN_STATUS', futureArrivals);
-                })
-                .catch((error) => {
-                    console.error('Error fetching train status:', error);
-                });
-        } else if (notification === 'GET_STOP_NAME') {
-            const stopId = payload.stopId;
-            const stopName = this.parentStops[stopId]['stopName'];
-            this.sendSocketNotification('STOP_NAME', {stopId: stopId, stopName: stopName});
+        if (this.MTATrainTimesNodeHelper) {
+            this.MTATrainTimesNodeHelper.socketNotificationReceived(notification, payload);
         }
-    },
-
-    getTrainStatus: async function (stopId, northBound, southBound, routeIds) {
-        try {
-            const fetch = (await import('node-fetch')).default;
-
-            const apiBases = this.getApis(routeIds);
-            const responses = await this.callApis(apiBases);
-            const futureArrivals = await this.parsefutureArrivals(stopId, northBound, southBound, routeIds, responses);
-            return futureArrivals;
-        }
-        catch (error) {
-            console.error(error);
-            process.exit(1);
-        }
-    },
-
-    getApis(routeIds) {
-        let apiBases = NaN
-        if (routeIds.length > 0) {
-            apiBases = routeIds
-                .filter(routeId => routeId in this.apiBases)
-                .map(routeId => this.apiBases[routeId]);
-        } else {
-            apiBases = Object.values(this.apiBases)
-        }
-
-        return [...new Set(apiBases)];
-    },  
-
-    async callApis(apiBases) {
-        try {
-            const responses = await Promise.all(
-                apiBases.map(async (apiBase) => {
-                    const response = await fetch(apiBase);
-                    if (!response.ok) {
-                        throw new Error(`${response.url}: ${response.status} ${response.statusText}`);
-                    }
-                    return response;
-                })
-            );
-            return responses;
-        } catch (error) {
-            console.error('Error calling APIs: ', error);
-        }
-    },
-
-    async parsefutureArrivals(stopId, northBound, southBound, routeIds, responses) {
-        try {
-            const allFutureArrivals = await Promise.all(responses.map(async (response) => {
-                const futureArrivals = [];
-                const buffer = await response.arrayBuffer();
-                const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
-
-                feed.entity.forEach((entity) => {
-                    if (entity.tripUpdate && this.isArrivingTrain(entity.tripUpdate, northBound, southBound)) {
-                        const stopTimeUpdates = entity.tripUpdate.stopTimeUpdate;
-                        const routeId = entity.tripUpdate.trip.routeId;
-                        if (routeIds.length === 0 || routeIds.includes(routeId)) {
-                            let stopArrivalTime = null;
-                            let lastStop = null;
-    
-                            for (let update of stopTimeUpdates) {
-                                if (this.parentStops[stopId]['childStops'].includes(update.stopId)) {
-                                    stopArrivalTime = update.arrival.time;
-                                };
-                            };
-                            if (stopArrivalTime) {
-                                lastStop = this.parentStops[stopTimeUpdates[stopTimeUpdates.length - 1].stopId.slice(0, -1)]?.stopName || 'unknown'; 
-                            };
-                            if (lastStop) {
-                                futureArrivals.push({
-                                    'arrivalTime': stopArrivalTime.low * 1000,
-                                    'lastStop': lastStop,
-                                    'routeId': routeId
-                                });
-                            };
-                        };
-                    };
-                });
-                return futureArrivals;
-            }));
-
-            return allFutureArrivals.flat();
-        } catch (error) {
-            console.error('Error processing API responses: ', error)
-        }
-    },
-
-    parseTripDirection: function (tripId) {
-        
-        const pattern = /^\d{6}_[A-Za-z0-9]\.\.(S|N)/;
-        const match = tripId.match(pattern);
-        if (match) {
-            const direction = match[1];
-            return direction === 'S' ? 'South' : 'North';
-        };
-        return null;
-    },
-
-    isArrivingTrain: function (tripUpdate, northBound, southBound) {
-        const isNorthbound = this.parseTripDirection(tripUpdate.trip.tripId) === 'North';
-        
-        let isArrivingTrain = false
-        if (northBound && southBound) {
-            isArrivingTrain = true
-        } else if (northBound && !southBound) {
-            isArrivingTrain = (isNorthbound)
-        } else if (!northBound && southBound) {
-            isArrivingTrain = (!isNorthbound)
-        } 
-        return isArrivingTrain;
-    },
+    }
 });
