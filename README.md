@@ -47,3 +47,11 @@ modules: [
 | `numTrains` | Number | The maximum number of trains to be displayed at once. |
 
 <em>In the example configuration, the module will display the next 10 northbound D and N trains arriving at Atlantic Av-Barclays Ctr.</em>
+
+## Aside
+
+I built this module as a personal coding challenge to complement my magic mirror, which I constructed using a 5" x 7" picture frame, 7" monitor, Raspberry Pi 3, two-way acrylic mirror, some spray paint, and some electrical tape. It provides real-time train arrival times at a glance, so I don’t have to check my phone.
+
+<p align="center">
+<img src="./documentation/personal_MM.jpg" width="50%">
+</p>
