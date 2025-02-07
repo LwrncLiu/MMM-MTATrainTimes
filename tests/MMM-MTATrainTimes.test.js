@@ -174,7 +174,7 @@ describe('MTATrainTimes', () => {
             trainTimes.socketNotificationReceived(notification, payload);
 
             expect(console.warn).toHaveBeenCalled();
-            expect(console.warn).toHaveBeenCalledWith('Unknown notification');
+            expect(console.warn).toHaveBeenCalledWith('Unknown notification RANDOM');
 
             console.warn.mockRestore();
         });
@@ -204,16 +204,16 @@ describe('MTATrainTimes', () => {
         test('arrival status is now if arrival is within a minute', () => {
             const arrival = {arrivalTime: Date.now() + 10000, routeId: 'D', lastStop: 'Coney Island-Stillwell Avenue' };
             const result = trainTimes.createArrivalElement(arrival, Date.now());
-            expect(result).toContain('<span class="arrival-time">Now</span>');
-            expect(result).toContain('src="MMM-MTATrainTimes/images/d_train.png"');
+            expect(result).toContain("<span class='arrival-time'>Now</span>");
+            expect(result).toContain("src='MMM-MTATrainTimes/images/d_train.png'");
             expect(result).toContain('Coney Island-Stillwell Avenue');
         });
 
         test('arrival status is correctly formatted and floored', () => {
             const arrival = {arrivalTime: Date.now() + (3 * 60000) + 10000, routeId: 'D', lastStop: 'Coney Island-Stillwell Avenue' };
             const result = trainTimes.createArrivalElement(arrival, Date.now());
-            expect(result).toContain('<span class="arrival-time">3 min</span>');
-            expect(result).toContain('src="MMM-MTATrainTimes/images/d_train.png"');
+            expect(result).toContain("<span class='arrival-time'>3 min</span>");
+            expect(result).toContain("src='MMM-MTATrainTimes/images/d_train.png'");
             expect(result).toContain('Coney Island-Stillwell Avenue');
         });
     });
